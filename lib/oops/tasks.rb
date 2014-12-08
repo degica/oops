@@ -111,7 +111,7 @@ namespace :oops do
 
     client = Oops::Client.new(args.app_name, args.stack_name)
     client.update_app_url(file_url)
-    client.run_command(name: "deploy", args: {"migrate" => "true"})
+    client.run_command(name: "deploy", args: {"migrate" => ["true"]})
   end
 
   private
