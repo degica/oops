@@ -97,8 +97,8 @@ namespace :oops do
   end
 
   task :deploy, :app_name, :stack_name, :filename do |t, args|
-    raise "app_name variable is required" unless (app_name = args.app_name)
-    raise "stack_name variable is required" unless (stack_name = args.stack_name)
+    raise "app_name variable is required" unless args.app_name
+    raise "stack_name variable is required" unless args.stack_name
     args.with_defaults filename: default_filename
     file_path = args.filename
     file_url = s3_url file_path
