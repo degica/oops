@@ -12,12 +12,13 @@ module Oops
       @aws_client.update_app(app_id: app_id, app_source: { url: file_url })
     end
 
-    def run_command(name:, args:)
+    def run_command(name:, args:, comment: "")
       Deployment.create(
         aws_client: @aws_client,
         stack_id: stack_id,
         app_id: app_id,
         instance_ids: instance_ids,
+        comment: comment,
         name: name,
         args: args
       ).run_until_finished

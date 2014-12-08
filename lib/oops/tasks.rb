@@ -87,6 +87,15 @@ namespace :oops do
     puts "Uploaded Application: #{s3.url_for(:read)}"
   end
 
+  task :recipe, :app_name, :stack_name, :recipe do |t, args|
+    raise "app_name variable is required" unless args.app_name
+    raise "stack_name variable is required" unless args.stack_name
+    raise "recipe variable is required" unless args.recipe
+
+    client = Oops::Client.new(args.app_name, args.stack_name)
+    client.run_command(name: "execute_recipes", comment: args.recipe, args: {"recipes" => [args.recipe]})
+  end
+
   task :deploy, :app_name, :stack_name, :filename do |t, args|
     raise "app_name variable is required" unless (app_name = args.app_name)
     raise "stack_name variable is required" unless (stack_name = args.stack_name)
