@@ -1,4 +1,5 @@
-require 'oops/opsworks_deploy'
+require 'oops/client'
+require 'oops/deployment'
 require 'aws'
 require 'rake'
 
@@ -99,19 +100,9 @@ namespace :oops do
       raise "Artifact \"#{file_url}\" doesn't seem to exist\nMake sure you've run `RAILS_ENV=deploy rake opsworks:build opsworks:upload` before deploying"
     end
 
-    ops = Oops::OpsworksDeploy.new args.app_name, args.stack_name
-    deployment = ops.deploy(file_url)
-
-    STDOUT.sync = true
-    STDOUT.print "Deploying"
-    loop do
-      STDOUT.print "."
-      break if deployment.finished?
-      sleep 5
-    end
-
-    STDOUT.puts "\nStatus: #{deployment.status}"
-    raise "Deploy failed. Check the OpsWorks console." if deployment.failed?
+    client = Oops::Client.new(args.app_name, args.stack_name)
+    client.update_app_url(file_url)
+    client.run_command(name: "deploy", args: {"migrate" => "true"})
   end
 
   private
