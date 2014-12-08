@@ -1,4 +1,5 @@
-require 'oops/opsworks_deploy'
+require 'oops/client'
+require 'oops/deployment'
 require 'aws'
 require 'rake'
 
@@ -86,9 +87,18 @@ namespace :oops do
     puts "Uploaded Application: #{s3.url_for(:read)}"
   end
 
+  task :recipe, :app_name, :stack_name, :recipe do |t, args|
+    raise "app_name variable is required" unless args.app_name
+    raise "stack_name variable is required" unless args.stack_name
+    raise "recipe variable is required" unless args.recipe
+
+    client = Oops::Client.new(args.app_name, args.stack_name)
+    client.run_command(name: "execute_recipes", comment: args.recipe, args: {"recipes" => [args.recipe]})
+  end
+
   task :deploy, :app_name, :stack_name, :filename do |t, args|
-    raise "app_name variable is required" unless (app_name = args.app_name)
-    raise "stack_name variable is required" unless (stack_name = args.stack_name)
+    raise "app_name variable is required" unless args.app_name
+    raise "stack_name variable is required" unless args.stack_name
     args.with_defaults filename: default_filename
     file_path = args.filename
     file_url = s3_url file_path
@@ -99,19 +109,9 @@ namespace :oops do
       raise "Artifact \"#{file_url}\" doesn't seem to exist\nMake sure you've run `RAILS_ENV=deploy rake opsworks:build opsworks:upload` before deploying"
     end
 
-    ops = Oops::OpsworksDeploy.new args.app_name, args.stack_name
-    deployment = ops.deploy(file_url)
-
-    STDOUT.sync = true
-    STDOUT.print "Deploying"
-    loop do
-      STDOUT.print "."
-      break if deployment.finished?
-      sleep 5
-    end
-
-    STDOUT.puts "\nStatus: #{deployment.status}"
-    raise "Deploy failed. Check the OpsWorks console." if deployment.failed?
+    client = Oops::Client.new(args.app_name, args.stack_name)
+    client.update_app_url(file_url)
+    client.run_command(name: "deploy", args: {"migrate" => "true"})
   end
 
   private
